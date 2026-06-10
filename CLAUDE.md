@@ -28,3 +28,56 @@
 - **ถ้าต้องการ context → อ่านไฟล์โดยตรง หรือถามพี่เอิร์ธ** — ห้ามหาเองด้วย bash
 - **ไม่แน่ใจ scope → ถามก่อน ห้ามเดา** — ทุกครั้งที่ไม่ชัดเจนให้ถามทันที
 - **เริ่มเขียนโค้ดเลย** — ไม่ต้อง investigate หรือ explore ก่อน ลงมือทำได้เลย
+
+---
+
+# Package: @earthstrix/claude-skills
+
+## Custom Skills ที่มีใน Package นี้
+
+### `team-agents`
+กำหนด subagent roles สำหรับทีม Earthstrix — ใช้เมื่อต้องเลือก agent type ที่เหมาะกับงาน
+
+| Agent | บทบาท | ใช้เมื่อ |
+|-------|--------|---------|
+| `ploysai` | Lead Frontend | FE architecture, tech stack decision |
+| `ploymoon` | Senior Frontend | React/CSS implementation, FE bug fix |
+| `ninni` | Lead Backend | API architecture, system design |
+| `ninne` | Senior Backend | API endpoints, business logic, BE bug fix |
+| `lin` | Database Architect | Schema design, query optimization |
+| `film` | Security Engineer | Security review, vulnerability assessment |
+| `mim` | UX/UI Designer | Design review, accessibility, user flow |
+| `mint` | DevOps Engineer | CI/CD, Docker, deployment, infrastructure |
+
+### `infographic-html`
+สร้าง HTML infographic ไฟล์เดียว self-contained จาก context และ user prompt — ต้องเรียก `frontend-design` skill ก่อนเสมอ
+
+### `infographic-markdown`
+สร้าง Markdown infographic จาก context และ user prompt — ใช้ design principles จาก `frontend-design` skill
+
+## Plugins ที่ติดตั้งโดย Installer
+
+### Official Marketplace (212 plugins)
+ครอบคลุม: GitHub, Notion, Slack, Stripe, Supabase, Vercel, Figma, Linear, Cloudflare, Datadog, MongoDB, Redis, Prisma, Playwright และอื่นๆ — รวม MCP server ของแต่ละ provider มาให้อัตโนมัติ
+
+### External GitHub Plugins
+- **`9arm-skills`** (`thananon/9arm-skills`) — debug-mantra, post-mortem, scrutinize
+- **`awesome-agent-skills`** (`VoltAgent/awesome-agent-skills`) — 1000+ community skills จาก official dev teams
+
+---
+
+# Changelog
+
+## v1.2.0
+- เพิ่ม external plugins: `9arm-skills`, `awesome-agent-skills`
+- เพิ่ม `CLAUDE.md` เข้า plugin — persona + rules จะ active อัตโนมัติหลัง install
+
+## v1.1.0
+- เพิ่ม skill `infographic-html` — สร้าง HTML infographic พร้อม `frontend-design` sub-skill
+- เพิ่ม skill `infographic-markdown` — สร้าง Markdown infographic
+
+## v1.0.0
+- สร้าง package `@earthstrix/claude-skills`
+- เพิ่ม skill `team-agents` — กำหนด subagent roles ทั้งทีม
+- CLI installer: `install`, `update`, `list`, `status`
+- Official marketplace plugins 212 รายการ
