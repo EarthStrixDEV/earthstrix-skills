@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { execSync, spawnSync } from 'child_process';
-import { readFileSync, existsSync, mkdirSync, cpSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, cpSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { homedir } from 'os';
@@ -9,8 +9,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
 const CONFIG = JSON.parse(readFileSync(join(ROOT, 'config', 'plugins.json'), 'utf8'));
 
+const CUSTOM_SKILLS = ['team-agents', 'infographic-html', 'infographic-markdown'];
+
 const command = process.argv[2] || 'help';
-const flags = process.argv.slice(3);
 
 switch (command) {
   case 'install': await runInstall(); break;
@@ -30,7 +31,7 @@ async function runInstall() {
   }
 
   const pluginCount = CONFIG.plugins.length;
-  console.log(`📦 Installing ${pluginCount} plugins from ${CONFIG.marketplace}...`);
+  console.log(`📦 Installing ${pluginCount} plugins from official marketplace...`);
   console.log('   This may take a few minutes.\n');
 
   const failed = [];
@@ -38,7 +39,7 @@ async function runInstall() {
   for (const plugin of CONFIG.plugins) {
     const result = spawnSync(
       'claude',
-      ['plugin', 'install', `${plugin}@${CONFIG.marketplace}`],
+      ['plugin', 'install', plugin],
       { stdio: 'pipe', encoding: 'utf8' }
     );
 
@@ -68,7 +69,7 @@ async function runInstall() {
     }
   }
 
-  installCustomPlugin();
+  installCustomSkills();
 
   console.log('\n─────────────────────────────────────');
   const totalCount = pluginCount + (CONFIG.external?.length ?? 0) + 1;
@@ -91,7 +92,7 @@ function runUpdate() {
   console.log('🔄 Updating all plugins...');
   try {
     execSync('claude plugin update --all', { stdio: 'inherit' });
-    installCustomPlugin();
+    installCustomSkills();
     console.log('\n✅ All plugins updated.');
   } catch {
     console.error('❌ Update failed. Try running with --verbose for details.');
@@ -100,7 +101,7 @@ function runUpdate() {
 }
 
 function runList() {
-  console.log(`📋 Plugins in ${CONFIG.marketplace} (${CONFIG.plugins.length} total):\n`);
+  console.log(`📋 Plugins in official marketplace (${CONFIG.plugins.length} total):\n`);
   CONFIG.plugins.forEach((p, i) => {
     console.log(`  ${String(i + 1).padStart(3)}. ${p}`);
   });
@@ -113,7 +114,7 @@ function runList() {
     });
   }
 
-  console.log(`  + earthstrix-skills (custom — team-agents, infographic-html, infographic-markdown)`);
+  console.log(`  + earthstrix-skills (custom — ${CUSTOM_SKILLS.join(', ')})`);
 }
 
 function runStatus() {
@@ -147,43 +148,61 @@ function runStatus() {
     }
   }
 
+  // Check if custom skills are discoverable
+  const skillsDir = join(homedir(), '.claude', 'skills');
+  const missingSkills = CUSTOM_SKILLS.filter(s => !existsSync(join(skillsDir, s, 'SKILL.md')));
+  if (missingSkills.length > 0) {
+    console.log(`\n⚠️  Missing from ~/.claude/skills/: ${missingSkills.join(', ')}`);
+    console.log('   Run "claude-skills install" to fix this.');
+  } else {
+    console.log(`\n✅ Earthstrix custom skills in ~/.claude/skills/: ${CUSTOM_SKILLS.join(', ')}`);
+  }
+
   console.log(`\n  Installed: ${installedCount} / ${allPlugins.length}`);
   if (missingCount > 0) {
     console.log(`  Missing: ${missingCount} — run "claude-skills install" to install them.`);
   }
 }
 
-function installCustomPlugin() {
-  const targetDir = join(homedir(), '.claude', 'plugins', 'custom', 'earthstrix-skills', '1.0.0');
+function installCustomSkills() {
+  console.log('\n🎯 Installing earthstrix custom skills...\n');
 
+  // Register in plugin registry (for status tracking)
+  const pluginDir = join(homedir(), '.claude', 'plugins', 'custom', 'earthstrix-skills', '1.2.0');
   try {
-    mkdirSync(targetDir, { recursive: true });
-
-    cpSync(join(ROOT, '.claude-plugin'), join(targetDir, '.claude-plugin'), { recursive: true });
-    cpSync(join(ROOT, 'skills'), join(targetDir, 'skills'), { recursive: true });
+    mkdirSync(pluginDir, { recursive: true });
+    cpSync(join(ROOT, '.claude-plugin'), join(pluginDir, '.claude-plugin'), { recursive: true });
+    cpSync(join(ROOT, 'skills'), join(pluginDir, 'skills'), { recursive: true });
 
     const installedPath = join(homedir(), '.claude', 'plugins', 'installed_plugins.json');
     let registry = { version: 2, plugins: {} };
-
     if (existsSync(installedPath)) {
       registry = JSON.parse(readFileSync(installedPath, 'utf8'));
     }
-
     registry.plugins['earthstrix-skills@custom'] = [{
       scope: 'user',
-      installPath: targetDir,
-      version: '1.0.0',
+      installPath: pluginDir,
+      version: '1.2.0',
       installedAt: new Date().toISOString(),
       lastUpdated: new Date().toISOString()
     }];
-
-    import('fs').then(({ writeFileSync }) => {
-      writeFileSync(installedPath, JSON.stringify(registry, null, 2));
-    });
-
-    console.log('  ✅ earthstrix-skills (team-agents)');
+    writeFileSync(installedPath, JSON.stringify(registry, null, 2));
   } catch (err) {
-    console.warn(`  ⚠️  earthstrix-skills (failed: ${err.message})`);
+    console.warn(`  ⚠️  plugin registry update failed: ${err.message}`);
+  }
+
+  // Copy skills to ~/.claude/skills/ — this is where Claude Code discovers them at session start
+  const globalSkillsDir = join(homedir(), '.claude', 'skills');
+  for (const skill of CUSTOM_SKILLS) {
+    const src = join(ROOT, 'skills', skill, 'SKILL.md');
+    const destDir = join(globalSkillsDir, skill);
+    try {
+      mkdirSync(destDir, { recursive: true });
+      cpSync(src, join(destDir, 'SKILL.md'));
+      console.log(`  ✅ ${skill}`);
+    } catch (err) {
+      console.warn(`  ⚠️  ${skill} (failed: ${err.message})`);
+    }
   }
 }
 

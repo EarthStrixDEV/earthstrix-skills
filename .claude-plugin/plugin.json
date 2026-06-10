@@ -14,5 +14,10 @@
     "earthstrix",
     "full-stack",
     "workflow"
+  ],
+  "skills": [
+    "skills/team-agents/SKILL.md",
+    "skills/infographic-html/SKILL.md",
+    "skills/infographic-markdown/SKILL.md"
   ]
 }
