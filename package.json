@@ -1,0 +1,41 @@
+{
+  "name": "@earthstrix/claude-skills",
+  "version": "1.2.0",
+  "description": "Earthstrix team Claude Code skill set — one command setup for the full official marketplace + team agent roles",
+  "type": "module",
+  "bin": {
+    "claude-skills": "./bin/install.js"
+  },
+  "files": [
+    ".claude-plugin",
+    "skills",
+    "config",
+    "bin",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/earthstrix/claude-skills"
+  },
+  "homepage": "https://github.com/earthstrix/claude-skills",
+  "bugs": {
+    "url": "https://github.com/earthstrix/claude-skills/issues"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "skills",
+    "ai",
+    "anthropic",
+    "earthstrix",
+    "team-agents"
+  ],
+  "author": {
+    "name": "Warapon Jitsook",
+    "email": "warapon.jitsook@gmail.com"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "earthstrix-skills",
+  "description": "Earthstrix team Claude Code skills — team agent roles for full-stack development",
+  "version": "1.2.0",
+  "author": {
+    "name": "Warapon Jitsook",
+    "email": "warapon.jitsook@gmail.com"
+  },
+  "homepage": "https://github.com/earthstrix/claude-skills",
+  "repository": "https://github.com/earthstrix/claude-skills",
+  "license": "MIT",
+  "keywords": [
+    "team-agents",
+    "earthstrix",
+    "full-stack",
+    "workflow"
+  ]
+}
